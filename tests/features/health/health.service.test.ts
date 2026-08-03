@@ -18,9 +18,11 @@ vi.mock("../../../src/utils/app-start-time.js", () => ({
 }));
 
 import fs from "node:fs";
-import { getHealthStatus } from "../../../src/features/health/health.service.js";
+import { HealthService } from "../../../src/features/health/health.service.js";
 
-describe("getHealthStatus", () => {
+describe("HealthService", () => {
+  const service = new HealthService();
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-28T12:00:00.000Z"));
@@ -34,7 +36,7 @@ describe("getHealthStatus", () => {
   it("retorna status ok com timestamp, uptime e database reachable", () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
 
-    const status = getHealthStatus();
+    const status = service.getStatus();
 
     expect(status).toMatchObject({
       status: "ok",
@@ -48,6 +50,6 @@ describe("getHealthStatus", () => {
   it("indica database missing quando arquivo nao existe", () => {
     vi.mocked(fs.existsSync).mockReturnValue(false);
 
-    expect(getHealthStatus().database).toBe("missing");
+    expect(service.getStatus().database).toBe("missing");
   });
 });

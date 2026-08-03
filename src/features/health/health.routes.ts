@@ -1,11 +1,15 @@
-import { Router, type Request, type Response } from "express";
-import { HealthController } from "./health.controller.js";
+import { Router } from "express";
+import { createHealthModule } from "../../composition/create-health-module.js";
+import { routeHandler } from "../../http/route-handler.js";
 
+const { controller } = createHealthModule();
 const router = Router();
-const controller = new HealthController();
 
-router.get("/", (request: Request, response: Response) =>
-  controller.index(request, response),
+router.get(
+  "/",
+  routeHandler((request, response) =>
+    controller.index(request, response),
+  ),
 );
 
 export { router as healthRouter };
