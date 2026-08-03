@@ -10,12 +10,16 @@ export interface HealthStatus {
   database: "reachable" | "missing";
 }
 
-export function getHealthStatus(): HealthStatus {
-  return {
-    status: "ok",
-    service: "oxetech-helpdesk",
-    timestamp: new Date().toISOString(),
-    uptime: getUptimeSeconds(),
-    database: fs.existsSync(DATABASE_PATH) ? "reachable" : "missing",
-  };
+export class HealthService {
+  getStatus(): HealthStatus {
+    return {
+      status: "ok",
+      service: "oxetech-helpdesk",
+      timestamp: new Date().toISOString(),
+      uptime: getUptimeSeconds(),
+      database: fs.existsSync(DATABASE_PATH)
+        ? "reachable"
+        : "missing",
+    };
+  }
 }

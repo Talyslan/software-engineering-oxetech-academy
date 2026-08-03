@@ -1,6 +1,6 @@
 # Oxetech Helpdesk API
 
-API REST em Node.js/TypeScript para chamados de suporte academico. Projeto de refatoracao incremental do curso 811.
+API REST em Node.js/TypeScript para chamados de suporte academico. Projeto de refatoracao incremental do curso 811 (AV1 → AV2 → AV3).
 
 ## Quick start
 
@@ -10,26 +10,33 @@ npm run seed
 npm run dev
 ```
 
-API disponivel em `http://localhost:3000/api`.
+API em `http://localhost:3000/api`.
+
+Copie `.env.example` para `.env` se quiser sobrescrever `PORT` ou `DATA_FILE` (padroes: `3000` e `data/db.json`).
 
 ## Requisitos
 
-- Node.js 20+
+- Node.js **20+** no desenvolvimento local (Docker e CI usam **Node 24**)
 - npm
-- Docker (opcional, para execucao em container)
+- Docker (opcional), para rodar via container
 
 ## Scripts
 
-| Script                  | Descricao                                    |
-| ----------------------- | -------------------------------------------- |
-| `npm run dev`           | API em modo desenvolvimento                  |
-| `npm run seed`          | Recria `data/db.json`                        |
-| `npm start`             | Executa build de producao (`dist/server.js`) |
-| `npm test`              | Suite de testes (Vitest)                     |
-| `npm run test:coverage` | Testes com cobertura                         |
-| `npm run lint`          | ESLint                                       |
-| `npm run typecheck`     | Verificacao de tipos                         |
-| `npm run build`         | Compila TypeScript para `dist/`              |
+| Script                  | Descricao                                      |
+| ----------------------- | ---------------------------------------------- |
+| `npm run dev`           | API em modo desenvolvimento (`tsx watch`)      |
+| `npm run seed`          | Recria `data/db.json`                          |
+| `npm run build`         | Compila TypeScript para `dist/`                |
+| `npm start`             | Sobe a API de producao (`node dist/server.js`) |
+| `npm test`              | Suite Vitest (37 testes)                       |
+| `npm run test:watch`    | Vitest em modo watch                           |
+| `npm run test:coverage` | Testes com cobertura (threshold 70%)           |
+| `npm run lint`          | ESLint                                         |
+| `npm run typecheck`     | `tsc --noEmit`                                 |
+
+`npm start` exige `npm run build` antes.
+
+No Windows com **Git Bash**, `npm test` passa por `scripts/run-vitest.mjs` para normalizar o casing do drive (`c:` vs `C:`); sem isso o Vitest pode falhar ao coletar os testes.
 
 ## Testes
 
@@ -40,19 +47,19 @@ npm run test:coverage
 
 A suite inclui:
 
-- testes unitarios de utils e services (`tests/features/`)
-- testes de integracao HTTP com supertest (`tests/integration/`)
+- unitarios de utils e services (`tests/features/`)
+- integracao HTTP com supertest (`tests/integration/`)
 
-## Executando com Docker
+## Docker
 
-Antes de subir o container, garanta dados locais (o compose monta `./data`):
+O compose monta `./data` em `/app/data`. Gere os dados locais antes:
 
 ```bash
 npm run seed
 docker compose up --build
 ```
 
-A API ficara em `http://localhost:3000/api`.
+API em `http://localhost:3000/api`. Imagem base: `node:24-alpine` (multi-stage).
 
 Build manual:
 
@@ -61,81 +68,74 @@ docker build -t oxetech-helpdesk .
 docker run -p 3000:3000 -v "$(pwd)/data:/app/data" oxetech-helpdesk
 ```
 
-## Integracao continua
+## CI
 
 ![CI](https://github.com/Talyslan/software-engineering-oxetech-academy/actions/workflows/ci.yml/badge.svg)
 
-Pipeline em [`.github/workflows/ci.yml`](.github/workflows/ci.yml): **lint**, **typecheck**, **testes** e **build** a cada push/PR.
+Workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml): **lint**, **typecheck**, **test** e **build** (Node 24) em push/PR envolvendo `main` (e tambem a branch `avaliacao-2`).
 
-## Estrutura do projeto
+## Estrutura
 
 ```
 src/
-├── app.ts                 # createApp() — Express configurado
-├── server.ts              # Entry point (listen)
-├── composition/           # Factory de modulos (tickets, users)
-├── features/              # health, tickets, users
-│   └── */                 # controller, service, repository, dtos
-├── http/                  # ApiError, middleware, validacao
-├── routes/                # Agregador de rotas
-└── utils/                 # persistencia JSON, helpers
+├── app.ts              # createApp() — Express configurado
+├── server.ts           # entry point (listen)
+├── composition/        # createTicketsModule, createUsersModule, createHealthModule
+├── config/             # env (Zod) e caminho do banco
+├── domain/             # contratos Controller / Service / Repository
+├── features/           # health, tickets, users
+├── http/               # ApiError, middleware, validacao Zod
+├── routes/             # agregador de rotas + fallbacks
+├── types/              # tipagens Express
+└── utils/              # JSON database, logger, helpers
 tests/
-├── features/              # unitarios
-└── integration/           # HTTP (supertest)
-data/
-└── avaliacao-2/           # documentacao e tasks da Avaliacao 2
+├── features/           # unitarios
+└── integration/        # HTTP (supertest)
+scripts/
+└── run-vitest.mjs      # cwd nativo no Windows (Git Bash)
+docs/                   # diagnosticos, arquitetura, relatorio final
 ```
 
-## Endpoints principais
+Persistencia: arquivo JSON em `data/db.json` (criado pelo seed; `data/` fica fora do git).
 
-### Healthcheck
+## Endpoints
+
+### Health
 
 ```http
 GET /api/health
 ```
 
-Resposta inclui `timestamp`, `uptime` (segundos) e status do arquivo de banco (`database`: `reachable` | `missing`).
-
 ```json
 {
   "status": "ok",
   "service": "oxetech-helpdesk",
-  "timestamp": "2026-06-28T12:00:00.000Z",
-  "uptime": 42,
+  "timestamp": "2026-08-03T19:30:45.660Z",
+  "uptime": 14,
   "database": "reachable"
 }
 ```
 
-### Listar usuarios
+`database` e `reachable` ou `missing` conforme exista o arquivo configurado em `DATA_FILE`.
+
+### Usuarios
 
 ```http
 GET /api/users
 ```
 
-Resposta **nao inclui** campo `password`.
+Resposta **sem** campo `password`.
 
-### Listar chamados
+### Chamados
 
 ```http
 GET /api/tickets
 GET /api/tickets?status=open
 GET /api/tickets?category=infra
 GET /api/tickets?search=login
-```
-
-### Resumo dos chamados
-
-```http
 GET /api/tickets/summary
-```
-
-### Detalhar chamado
-
-```http
 GET /api/tickets/ticket_001
 ```
-
-### Criar chamado
 
 ```http
 POST /api/tickets
@@ -149,8 +149,6 @@ Content-Type: application/json
 }
 ```
 
-### Atualizar status
-
 ```http
 PATCH /api/tickets/ticket_001/status
 Content-Type: application/json
@@ -162,8 +160,6 @@ Content-Type: application/json
 }
 ```
 
-### Adicionar comentario
-
 ```http
 POST /api/tickets/ticket_001/comments
 Content-Type: application/json
@@ -174,33 +170,40 @@ Content-Type: application/json
 }
 ```
 
-## Jornada de refatoracao
+## Documentacao da jornada
 
-Trabalhe em Pull Requests pequenos e bem explicados. Consulte [docs/CHECKPOINTS.md](docs/CHECKPOINTS.md).
+Consulte tambem [docs/CHECKPOINTS.md](docs/CHECKPOINTS.md).
 
 ### Avaliacao 1
 
-- [Diagnostico inicial](docs/DIAGNOSTICO-ATIVIDADE-1.md)
-- [Validacao manual A1](docs/VALIDACAO-MANUAL-A1.md)
+- [Diagnostico](docs/DIAGNOSTICO-ATIVIDADE-1.md)
+- [Validacao manual](docs/VALIDACAO-MANUAL-A1.md)
 
 ### Avaliacao 2
 
-- [Diagnostico A2](docs/DIAGNOSTICO-AVALIACAO-2.md)
-- [Evolucao A2](docs/EVOLUCAO-A2.md)
-- [Arquitetura A2](docs/ARQUITETURA-A2.md)
-- [Validacao manual A2](docs/VALIDACAO-MANUAL-A2.md)
-- [Texto do Pull Request](docs/PULL-REQUEST-AVALIACAO-2.md)
-- [Tasks e guias](data/avaliacao-2/tasks/README.md)
+- [Diagnostico](docs/DIAGNOSTICO-AVALIACAO-2.md)
+- [Evolucao](docs/EVOLUCAO-A2.md)
+- [Arquitetura](docs/ARQUITETURA-A2.md)
+- [Validacao manual](docs/VALIDACAO-MANUAL-A2.md)
+- [Texto do PR](docs/PULL-REQUEST-AVALIACAO-2.md)
 
-## Como avaliar esta entrega
+### Avaliacao 3 (Projeto Final)
+
+- [Relatorio final](docs/RELATORIO-FINAL-A3.md)
+- [Arquitetura / evolucao A1→A3](docs/ARQUITETURA-A3.md)
+- [Texto do PR](docs/PULL-REQUEST-AVALIACAO-3.md)
+
+## Como avaliar (AV3)
 
 ```bash
+npm install
 npm run lint
 npm run typecheck
 npm test
 npm run build
-npm run seed && npm run dev
-# ou: npm run seed && docker compose up --build
+npm run seed && docker compose up --build
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/users
 ```
+
+Contexto completo: [docs/RELATORIO-FINAL-A3.md](docs/RELATORIO-FINAL-A3.md).
