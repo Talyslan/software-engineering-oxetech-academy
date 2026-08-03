@@ -45,7 +45,7 @@ A jornada do curso partiu desse estado legado e evoluiu no **mesmo fork**, em ch
 - Docker (`Dockerfile` + `compose`) e GitHub Actions CI
 - Logger, health enriquecido, docs de evolucao/arquitetura
 
-### Avaliacao 3 (este checkpoint)
+### Avaliacao 3
 
 Foco em **consolidar**, nao em features novas:
 
@@ -137,7 +137,7 @@ Smoke: `GET /api/users` sem `password`; `GET /api/tickets?status=open` com lista
 
 ---
 
-## 8. Como colocaria no ar (nivel atual)
+## 8. Como colocaria no ar (atualmente)
 
 Proporcional a complexidade atual (API Node + JSON):
 
@@ -147,15 +147,3 @@ Proporcional a complexidade atual (API Node + JSON):
 4. **CI** — o workflow atual ja valida lint/test/build; o deploy pode ser manual apos CI verde.
 
 Nao ha necessidade de microsservicos, fila ou banco gerenciado para o nivel do curso.
-
----
-
-## 9. Proximos passos possiveis
-
-- Autenticacao (JWT ou sessao) e autorizacao por `role`
-- Banco relacional (PostgreSQL) + migrations
-- Rate limiting e CORS restrito
-- Mais testes de integracao nos fluxos de comentario/status
-- Observabilidade minima (request id, metricas basicas)
-
-Nenhum desses itens foi implementado na AV3 de proposito: o escopo foi consolidar o que ja existia.
