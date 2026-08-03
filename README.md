@@ -73,7 +73,7 @@ Pipeline em [`.github/workflows/ci.yml`](.github/workflows/ci.yml): **lint**, **
 src/
 ├── app.ts                 # createApp() — Express configurado
 ├── server.ts              # Entry point (listen)
-├── composition/           # Factory de modulos (tickets, users)
+├── composition/           # Factory de modulos (tickets, users, health)
 ├── features/              # health, tickets, users
 │   └── */                 # controller, service, repository, dtos
 ├── http/                  # ApiError, middleware, validacao
@@ -82,8 +82,8 @@ src/
 tests/
 ├── features/              # unitarios
 └── integration/           # HTTP (supertest)
-data/
-└── avaliacao-2/           # documentacao e tasks da Avaliacao 2
+scripts/
+└── run-vitest.mjs         # normaliza cwd no Windows (Git Bash)
 ```
 
 ## Endpoints principais
@@ -189,18 +189,24 @@ Trabalhe em Pull Requests pequenos e bem explicados. Consulte [docs/CHECKPOINTS.
 - [Evolucao A2](docs/EVOLUCAO-A2.md)
 - [Arquitetura A2](docs/ARQUITETURA-A2.md)
 - [Validacao manual A2](docs/VALIDACAO-MANUAL-A2.md)
-- [Texto do Pull Request](docs/PULL-REQUEST-AVALIACAO-2.md)
-- [Tasks e guias](data/avaliacao-2/tasks/README.md)
+- [Texto do Pull Request A2](docs/PULL-REQUEST-AVALIACAO-2.md)
 
-## Como avaliar esta entrega
+### Avaliacao 3 (Projeto Final)
+
+- [Relatorio final](docs/RELATORIO-FINAL-A3.md)
+- [Arquitetura / evolucao A1→A3](docs/ARQUITETURA-A3.md)
+- [Texto do Pull Request A3](docs/PULL-REQUEST-AVALIACAO-3.md)
+
+## Como avaliar esta entrega (AV3)
 
 ```bash
 npm run lint
 npm run typecheck
 npm test
 npm run build
-npm run seed && npm run dev
-# ou: npm run seed && docker compose up --build
+npm run seed && docker compose up --build
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/users
 ```
+
+Leia o [relatorio final](docs/RELATORIO-FINAL-A3.md) para o contexto completo da evolucao.
